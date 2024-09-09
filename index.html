@@ -14,7 +14,7 @@
             align-items: center;
             height: 100vh;
             margin: 0;
-            background: linear-gradient(to right, #ece9e6, #ffffff);
+            background: linear-gradient(to right, #f0f4f8, #ffffff); /* Fondo claro elegante */
             color: #333;
         }
 
@@ -118,8 +118,6 @@
     document.addEventListener('DOMContentLoaded', () => {
         const greetingElement = document.getElementById('greeting');
         const hour = new Date().getHours();
-        const month = new Date().getMonth();
-        const body = document.body;
 
         // Saludo según el horario
         if (hour < 12) {
@@ -128,22 +126,6 @@
             greetingElement.textContent = 'Buenas tardes';
         } else {
             greetingElement.textContent = 'Buenas noches';
-        }
-
-        // Fondo según la estación del año
-        if (month >= 2 && month <= 4) {
-            body.style.backgroundImage = 'url("https://example.com/spring.jpg")'; // Primavera
-        } else if (month >= 5 && month <= 7) {
-            body.style.backgroundImage = 'url("https://example.com/summer.jpg")'; // Verano
-        } else if (month >= 8 && month <= 10) {
-            body.style.backgroundImage = 'url("https://example.com/fall.jpg")'; // Otoño
-        } else {
-            body.style.backgroundImage = 'url("https://example.com/winter.jpg")'; // Invierno
-        }
-
-        // Fondo según el horario
-        if (hour >= 18 || hour < 6) {
-            body.style.backgroundImage = 'url("https://example.com/night.jpg")'; // Noche
         }
     });
 
