@@ -108,6 +108,7 @@
     <div class="container">
         <h2 id="greeting"></h2>
         <input type="text" id="location" placeholder="Ingresa un lugar">
+        <!-- Evento onclick: Se activa al hacer clic en el botón -->
         <button onclick="getWeather()">Obtener Clima</button>
         <div id="loading">Cargando...</div>
         <div id="error">No se pudo obtener la información del clima.</div>
@@ -115,6 +116,7 @@
     </div>
 
     <script>
+    // Evento DOMContentLoaded: Se activa cuando el contenido HTML ha sido cargado y procesado.
     document.addEventListener('DOMContentLoaded', () => {
         const greetingElement = document.getElementById('greeting');
         const hour = new Date().getHours();
@@ -129,27 +131,29 @@
         }
     });
 
+    // Función para obtener el clima actual
     async function getWeather() {
         const button = document.querySelector('button');
         const location = document.getElementById('location').value.trim();
         const loadingElement = document.getElementById('loading');
         const errorElement = document.getElementById('error');
 
-        // Validación del campo de entrada
+        // Validación del campo de entrada: Comprobar si se ha ingresado un lugar
         if (!location) {
             alert("Por favor, ingresa un lugar.");
             return;
         }
 
-        button.disabled = true;  // Desactivar botón
-        loadingElement.style.display = 'block';
-        errorElement.style.display = 'none';
+        // Cambios de estado visual al iniciar la búsqueda
+        button.disabled = true;  // Desactivar botón mientras se carga
+        loadingElement.style.display = 'block';  // Mostrar mensaje de carga
+        errorElement.style.display = 'none';  // Ocultar mensajes de error previos
 
         const apiKey = '9310bae179295f6eb70c57737b374771'; // Reemplaza con tu nueva clave de API de OpenWeatherMap
         const geoUrl = `https://api.openweathermap.org/geo/1.0/direct?q=${location}&limit=1&appid=${apiKey}`;
 
         try {
-            // Obtener coordenadas del lugar
+            // Solicitud para obtener las coordenadas del lugar ingresado
             const geoResponse = await fetch(geoUrl);
             const geoData = await geoResponse.json();
 
@@ -160,10 +164,11 @@
                 return;
             }
 
+            // Extraer latitud y longitud de los datos de geolocalización
             const { lat, lon } = geoData[0];
             const weatherUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&lang=es&appid=${apiKey}`;
 
-            // Obtener clima actual
+            // Solicitud para obtener el clima actual con las coordenadas obtenidas
             const weatherResponse = await fetch(weatherUrl);
             const weatherData = await weatherResponse.json();
 
@@ -174,22 +179,27 @@
                 return;
             }
 
+            // Mostrar los datos del clima obtenidos
             displayWeather(weatherData);
         } catch (error) {
+            // Manejo de errores en caso de fallo en la solicitud
             errorElement.textContent = "Hubo un error al obtener el clima. Verifica la clave de API.";
             errorElement.style.display = 'block';
             console.error(error);
         } finally {
+            // Restaurar el estado original después de la solicitud
             loadingElement.style.display = 'none';
             button.disabled = false;  // Activar botón
         }
     }
 
+    // Función para mostrar los datos del clima en la interfaz
     function displayWeather(data) {
         const weatherElement = document.getElementById('weather');
-        weatherElement.style.opacity = 0;  // Inicialmente oculta
+        weatherElement.style.opacity = 0;  // Ocultar inicialmente para efecto de transición
         weatherElement.innerHTML = '';
 
+        // Extraer y mostrar datos clave del clima
         const temp = data.main.temp.toFixed(1);
         const weatherDescription = data.weather[0].description;
         const locationName = data.name;
@@ -197,6 +207,7 @@
         const windSpeed = data.wind.speed;
         const icon = `http://openweathermap.org/img/wn/${data.weather[0].icon}@2x.png`;
 
+        // Actualizar el contenido HTML del contenedor de clima
         weatherElement.innerHTML = `
             <h3>${locationName}</h3>
             <img src="${icon}" alt="Weather icon" class="icon">
@@ -205,8 +216,9 @@
             <p>Viento: ${windSpeed} m/s</p>
         `;
 
+        // Efecto de transición para mostrar los datos
         setTimeout(() => {
-            weatherElement.style.opacity = 1;  // Mostrar con transición
+            weatherElement.style.opacity = 1;
         }, 100);
     }
     </script>
