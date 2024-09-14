@@ -45,3 +45,4 @@ const apiKey = 'TU_API_KEY_AQUI';
 ## 🌟 Créditos
 
 Proyecto desarrollado con ❤️ por [Ramiro Estigarribia Canese](https://github.com/ramiroec).
+Proyecto modificado por [Bruno Aguilera](https://github.com/brunoaguilera).
