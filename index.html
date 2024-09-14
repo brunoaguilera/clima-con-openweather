@@ -102,26 +102,102 @@
             color: red;
             margin-top: 10px;
         }
+
+        /* Popup modal para seleccionar la ubicación */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 600px;
+            border-radius: 10px;
+            text-align: left;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        table, th, td {
+            border: 1px solid #ccc;
+        }
+
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
     </style>
 </head>
 <body>
     <div class="container">
         <h2 id="greeting"></h2>
         <input type="text" id="location" placeholder="Ingresa un lugar">
-        <!-- Evento onclick: Se activa al hacer clic en el botón -->
         <button onclick="getWeather()">Obtener Clima</button>
         <div id="loading">Cargando...</div>
         <div id="error">No se pudo obtener la información del clima.</div>
         <div id="weather" class="weather"></div>
     </div>
 
+    <!-- Modal para seleccionar ubicación -->
+    <div id="locationModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h3>Selecciona una ubicación:</h3>
+            <table id="locationTable">
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Latitud</th>
+                        <th>Longitud</th>
+                        <th>País</th>
+                        <th>Estado</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
     <script>
-    // Evento DOMContentLoaded: Se activa cuando el contenido HTML ha sido cargado y procesado.
     document.addEventListener('DOMContentLoaded', () => {
         const greetingElement = document.getElementById('greeting');
         const hour = new Date().getHours();
 
-        // Saludo según el horario
         if (hour < 12) {
             greetingElement.textContent = 'Buenos días';
         } else if (hour < 18) {
@@ -131,75 +207,104 @@
         }
     });
 
-    // Función para obtener el clima actual
     async function getWeather() {
         const button = document.querySelector('button');
         const location = document.getElementById('location').value.trim();
         const loadingElement = document.getElementById('loading');
         const errorElement = document.getElementById('error');
 
-        // Validación del campo de entrada: Comprobar si se ha ingresado un lugar
         if (!location) {
             alert("Por favor, ingresa un lugar.");
             return;
         }
 
-        // Cambios de estado visual al iniciar la búsqueda
-        button.disabled = true;  // Desactivar botón mientras se carga
-        loadingElement.style.display = 'block';  // Mostrar mensaje de carga
-        errorElement.style.display = 'none';  // Ocultar mensajes de error previos
+        button.disabled = true;
+        loadingElement.style.display = 'block';
+        errorElement.style.display = 'none';
 
-        const apiKey = 'XXXXXXXXXXXXXXXXXXXXXX'; // Reemplaza con tu clave de API de OpenWeatherMap
-        const geoUrl = `https://api.openweathermap.org/geo/1.0/direct?q=${location}&limit=1&appid=${apiKey}`;
+        const apiKey = '91e8f5e82b33de9fae60a47c13953690'; 
+        const geoUrl = `https://api.openweathermap.org/geo/1.0/direct?q=${location}&limit=5&appid=${apiKey}`;
 
         try {
-            // Solicitud para obtener las coordenadas del lugar ingresado
             const geoResponse = await fetch(geoUrl);
             const geoData = await geoResponse.json();
 
-            // Verificar si se obtuvieron datos de geolocalización
-            if (!geoData || geoData.length === 0 || !geoData[0].lat || !geoData[0].lon) {
-                errorElement.textContent = "Lugar no encontrado o problema con la API Key. Inténtalo de nuevo.";
+            if (!geoData || geoData.length === 0) {
+                errorElement.textContent = "Lugar no encontrado.";
                 errorElement.style.display = 'block';
                 return;
             }
 
-            // Extraer latitud y longitud de los datos de geolocalización
-            const { lat, lon } = geoData[0];
-            const weatherUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&lang=es&appid=${apiKey}`;
-
-            // Solicitud para obtener el clima actual con las coordenadas obtenidas
-            const weatherResponse = await fetch(weatherUrl);
-            const weatherData = await weatherResponse.json();
-
-            // Verificar si se obtuvieron datos del clima
-            if (!weatherData || !weatherData.weather || !weatherData.main) {
-                errorElement.textContent = "No se pudo obtener el clima actual.";
-                errorElement.style.display = 'block';
-                return;
+            if (geoData.length > 1) {
+                showLocationModal(geoData);
+            } else {
+                const { lat, lon } = geoData[0];
+                getWeatherData(lat, lon);
             }
-
-            // Mostrar los datos del clima obtenidos
-            displayWeather(weatherData);
         } catch (error) {
-            // Manejo de errores en caso de fallo en la solicitud
-            errorElement.textContent = "Hubo un error al obtener el clima. Verifica la clave de API.";
+            errorElement.textContent = "Error al obtener los datos de geolocalización.";
             errorElement.style.display = 'block';
-            console.error(error);
         } finally {
-            // Restaurar el estado original después de la solicitud
             loadingElement.style.display = 'none';
-            button.disabled = false;  // Activar botón
+            button.disabled = false;
         }
     }
 
-    // Función para mostrar los datos del clima en la interfaz
+    function showLocationModal(locations) {
+        const modal = document.getElementById('locationModal');
+        const tbody = document.querySelector('#locationTable tbody');
+        tbody.innerHTML = '';
+
+        locations.forEach(location => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${location.name}</td>
+                <td>${location.lat}</td>
+                <td>${location.lon}</td>
+                <td>${location.country}</td>
+                <td>${location.state || 'N/A'}</td>
+                <td><button onclick="selectLocation(${location.lat}, ${location.lon})">Seleccionar</button></td>
+            `;
+            tbody.appendChild(row);
+        });
+
+        modal.style.display = 'block';
+    }
+
+    function closeModal() {
+        document.getElementById('locationModal').style.display = 'none';
+    }
+
+    function selectLocation(lat, lon) {
+        closeModal();
+        getWeatherData(lat, lon);
+    }
+
+    async function getWeatherData(lat, lon) {
+        const apiKey = '91e8f5e82b33de9fae60a47c13953690';
+        const weatherUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&lang=es&appid=${apiKey}`;
+
+        try {
+            const weatherResponse = await fetch(weatherUrl);
+            const weatherData = await weatherResponse.json();
+
+            if (!weatherData || !weatherData.weather || !weatherData.main) {
+                errorElement.textContent = "No se pudo obtener el clima.";
+                errorElement.style.display = 'block';
+                return;
+            }
+
+            displayWeather(weatherData);
+        } catch (error) {
+            document.getElementById('error').textContent = "Error al obtener los datos del clima.";
+        }
+    }
+
     function displayWeather(data) {
         const weatherElement = document.getElementById('weather');
-        weatherElement.style.opacity = 0;  // Ocultar inicialmente para efecto de transición
+        weatherElement.style.opacity = 0;
         weatherElement.innerHTML = '';
 
-        // Extraer y mostrar datos clave del clima
         const temp = data.main.temp.toFixed(1);
         const weatherDescription = data.weather[0].description;
         const locationName = data.name;
@@ -207,7 +312,6 @@
         const windSpeed = data.wind.speed;
         const icon = `http://openweathermap.org/img/wn/${data.weather[0].icon}@2x.png`;
 
-        // Actualizar el contenido HTML del contenedor de clima
         weatherElement.innerHTML = `
             <h3>${locationName}</h3>
             <img src="${icon}" alt="Weather icon" class="icon">
@@ -216,7 +320,6 @@
             <p>Viento: ${windSpeed} m/s</p>
         `;
 
-        // Efecto de transición para mostrar los datos
         setTimeout(() => {
             weatherElement.style.opacity = 1;
         }, 100);
